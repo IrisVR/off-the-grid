@@ -32,6 +32,7 @@
     "babel-eslint": "^7.1.1",
     "chai": "^3.5.0",
     "codecov": "^1.0.1",
+    "condition-circle": "^1.5.0",
     "eslint": "^3.14.0",
     "eslint-config-airbnb-base": "^11.0.1",
     "eslint-plugin-import": "^2.2.0",
@@ -39,7 +40,10 @@
     "mocha": "^3.2.0",
     "mock-fs": "^3.12.1",
     "nyc": "^10.1.2",
-    "sinon": "^1.17.7",
-    "semantic-release": "^6.3.2"
+    "semantic-release": "^6.3.2",
+    "sinon": "^1.17.7"
+  },
+  "release": {
+    "verifyConditions": "condition-circle"
   }
 }
