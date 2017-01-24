@@ -1,5 +1,8 @@
 # Off the Grid
 
+[![CircleCI](https://img.shields.io/circleci/project/github/IrisVR/off-the-grid.svg?style=flat-square)](https://circleci.com/gh/IrisVR/off-the-grid)
+[![Codecov](https://img.shields.io/codecov/c/github/IrisVR/off-the-grid.svg?style=flat-square)](https://codecov.io/gh/IrisVR/off-the-grid)
+
 When using 3rd party data analytics service in an offline capable app such as when using Electron, constant internet connection is required to keep sending data to the analytics service. When the internet connection drops out, we can't send data to the service, resulting in data loss. 
 
 __Off the Grid__ is designed to handle this scenario. The basic idea is, __Off the Grid__ will cache the data when our app is offline and will replay the data back when our app is online.
