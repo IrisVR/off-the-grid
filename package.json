@@ -1,6 +1,6 @@
 {
   "name": "off-the-grid",
-  "version": "0.0.1",
+  "version": "0.0.0-semantically-released",
   "description": "Save data when there is no connection and replay back data as soon as connection established or within specified interval",
   "main": "index.js",
   "scripts": {
@@ -8,7 +8,8 @@
     "test": "./node_modules/.bin/mocha",
     "test:watch": "./node_modules/.bin/mocha -w",
     "coverage": "./node_modules/.bin/nyc npm test",
-    "report-coverage": "cat ./coverage/lcov.info | ./node_modules/.bin/codecov"
+    "report-coverage": "cat ./coverage/lcov.info | ./node_modules/.bin/codecov",
+    "semantic-release": "semantic-release pre && npm publish && semantic-release post"
   },
   "repository": {
     "type": "git",
@@ -38,6 +39,7 @@
     "mocha": "^3.2.0",
     "mock-fs": "^3.12.1",
     "nyc": "^10.1.2",
-    "sinon": "^1.17.7"
+    "sinon": "^1.17.7",
+    "semantic-release": "^6.3.2"
   }
 }
