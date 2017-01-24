@@ -6,7 +6,8 @@
   "scripts": {
     "lint": "./node_modules/.bin/eslint ./src",
     "test": "./node_modules/.bin/mocha",
-    "test:watch": "./node_modules/.bin/mocha -w"
+    "test:watch": "./node_modules/.bin/mocha -w",
+    "coverage": "./node_modules/.bin/nyc --check-coverage --lines 98 --branches 89 --statements 97 npm test"
   },
   "keywords": [
     "offline",

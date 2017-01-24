@@ -56,31 +56,31 @@ class Logger {
   // Just in case we need to write when shutdown
   // https://github.com/winstonjs/winston/issues/228
   // log then exit(1)
-  writeBeforeShutdown(message, body) {
-    this._logger.error('error', message, { body }, (err) => {
-      if (err) { process.exit(1); }
+  // writeBeforeShutdown(message, body) {
+  //   this._logger.error('error', message, { body }, (err) => {
+  //     if (err) { process.exit(1); }
 
-      let numFlushes = 0;
-      let numFlushed = 0;
+  //     let numFlushes = 0;
+  //     let numFlushed = 0;
 
-      Object.keys(this._logger.transports).forEach((k) => {
-        if (this._logger.transports[k]._stream) {
-          numFlushes += 1;
-          this._logger.transports[k]._stream.once('finish', () => {
-            numFlushed += 1;
-            if (numFlushes === numFlushed) {
-              process.exit(1);
-            }
-          });
-          this._logger.transports[k]._stream.end();
-        }
-      });
+  //     Object.keys(this._logger.transports).forEach((k) => {
+  //       if (this._logger.transports[k]._stream) {
+  //         numFlushes += 1;
+  //         this._logger.transports[k]._stream.once('finish', () => {
+  //           numFlushed += 1;
+  //           if (numFlushes === numFlushed) {
+  //             process.exit(1);
+  //           }
+  //         });
+  //         this._logger.transports[k]._stream.end();
+  //       }
+  //     });
 
-      if (numFlushes === 0) {
-        process.exit(1);
-      }
-    });
-  }
+  //     if (numFlushes === 0) {
+  //       process.exit(1);
+  //     }
+  //   });
+  // }
 }
 
 module.exports = Logger;

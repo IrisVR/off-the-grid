@@ -59,6 +59,31 @@ describe("OffTheGrid", () => {
       });
   });
 
+  it("should flush data from an empty log file and not applying it to the callback", (done) => {
+    mock({
+      [mockDir]: {}
+    });
+
+    let isCalled = false;
+
+    offTheGrid = new OffTheGrid({
+      logFilePath: `${mockDir}/${mockLogfile}`,
+      interval: 100000,
+      isOnline: false,
+      replayImmediately: false,
+      callback: () => {
+        isCalled = true;
+      }
+    });
+
+    setTimeout(() => {
+      expect(isCalled).to.equal(false);
+      done();
+    }, 100);
+    
+    offTheGrid._replay();
+  });
+
   it("should flush data from a log file and apply it to the callback", (done) => {
     const fakeData = generateFakeData();
 
@@ -178,6 +203,40 @@ describe("OffTheGrid", () => {
     afterEach(() => {
       mock.restore();
     });
+
+  it("should record data instead of replaying data when it becomes offline", (done) => {
+    const fakeDataOnline = generateFakeData();
+
+    mock({
+      [mockDir]: {}
+    });
+
+    offTheGrid = new OffTheGrid({
+      logFilePath: `${mockDir}/${mockLogfile}`,
+      interval: 10,
+      isOnline: true,
+      replayImmediately: true,
+      callback: () => {}
+    });
+
+    offTheGrid.record(fakeDataOnline.message, fakeDataOnline.Body);
+
+    setTimeout(() => {
+      offTheGrid.setOffline();
+
+      const fakeDataOffline = generateFakeData();
+
+      offTheGrid.record(fakeDataOffline.message, fakeDataOffline.body)
+        .then(() => utils.readFile(`${mockDir}/${mockLogfile}`))
+        .then((data) => parse(data))
+        .then((data) => {
+          expect(data[0].message).to.equal(fakeDataOffline.message);
+          expect(data[0].body).to.deep.equal(fakeDataOffline.body);
+
+          done();
+        });
+    }, 20);
+  });
 
     it("should record when offline and NOT replay when offline within a specified interval", (done) => {
       const spy = sinon.spy();
