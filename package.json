@@ -8,6 +8,7 @@
     "test": "./node_modules/.bin/mocha",
     "test:watch": "./node_modules/.bin/mocha -w",
     "coverage": "./node_modules/.bin/nyc npm test",
+    "validate": "./node_modules/.bin/npm-run-all --parallel lint coverage",
     "commit": "git-cz",
     "report-coverage": "cat ./coverage/lcov.info | ./node_modules/.bin/codecov",
     "semantic-release": "semantic-release pre && npm publish && semantic-release post"
@@ -42,8 +43,10 @@
     "eslint-config-airbnb-base": "^11.0.1",
     "eslint-plugin-import": "^2.2.0",
     "faker": "^3.1.0",
+    "ghooks": "^2.0.0",
     "mocha": "^3.2.0",
     "mock-fs": "^3.12.1",
+    "npm-run-all": "^4.0.1",
     "nyc": "^10.1.2",
     "semantic-release": "^6.3.2",
     "sinon": "^1.17.7"
@@ -54,6 +57,9 @@
   "config": {
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"
+    },
+    "ghooks": {
+      "pre-commit": "npm run lint"
     }
   }
 }
