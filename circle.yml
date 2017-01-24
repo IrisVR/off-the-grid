@@ -7,3 +7,9 @@ general:
     only:
       - master
       - develop
+
+test:
+  override:
+    - npm run coverage
+  post:
+    - npm run report-coverage

@@ -7,12 +7,13 @@
     "lint": "./node_modules/.bin/eslint ./src",
     "test": "./node_modules/.bin/mocha",
     "test:watch": "./node_modules/.bin/mocha -w",
-    "coverage": "./node_modules/.bin/nyc --check-coverage --lines 98 --branches 89 --statements 97 npm test"
+    "coverage": "./node_modules/.bin/nyc npm test",
+    "report-coverage": "cat ./coverage/lcov.info | ./node_modules/.bin/codecov"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/IrisVR/off-the-grid"
-  }, 
+  },
   "keywords": [
     "offline cache",
     "offline analytics"
@@ -29,6 +30,7 @@
   "devDependencies": {
     "babel-eslint": "^7.1.1",
     "chai": "^3.5.0",
+    "codecov": "^1.0.1",
     "eslint": "^3.14.0",
     "eslint-config-airbnb-base": "^11.0.1",
     "eslint-plugin-import": "^2.2.0",
