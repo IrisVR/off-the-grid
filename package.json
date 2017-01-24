@@ -14,9 +14,8 @@
     "url": "https://github.com/IrisVR/off-the-grid"
   }, 
   "keywords": [
-    "offline",
-    "action",
-    "queue"
+    "offline cache",
+    "offline analytics"
   ],
   "author": "Christian Sakai",
   "license": "MIT",
