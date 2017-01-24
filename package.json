@@ -8,6 +8,7 @@
     "test": "./node_modules/.bin/mocha",
     "test:watch": "./node_modules/.bin/mocha -w",
     "coverage": "./node_modules/.bin/nyc npm test",
+    "commit": "git-cz",
     "report-coverage": "cat ./coverage/lcov.info | ./node_modules/.bin/codecov",
     "semantic-release": "semantic-release pre && npm publish && semantic-release post"
   },
@@ -19,7 +20,10 @@
     "offline cache",
     "offline analytics"
   ],
-  "author": "Christian Sakai",
+  "author": {
+    "name": "Christian Sakai",
+    "email": "christianmsakai@gmail.com"
+  },
   "license": "MIT",
   "dependencies": {
     "async-lock": "^0.3.9",
@@ -33,6 +37,7 @@
     "chai": "^3.5.0",
     "codecov": "^1.0.1",
     "condition-circle": "^1.5.0",
+    "cz-conventional-changelog": "^1.2.0",
     "eslint": "^3.14.0",
     "eslint-config-airbnb-base": "^11.0.1",
     "eslint-plugin-import": "^2.2.0",
@@ -45,5 +50,10 @@
   },
   "release": {
     "verifyConditions": "condition-circle"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
   }
 }
