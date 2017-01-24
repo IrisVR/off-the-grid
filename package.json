@@ -9,6 +9,10 @@
     "test:watch": "./node_modules/.bin/mocha -w",
     "coverage": "./node_modules/.bin/nyc --check-coverage --lines 98 --branches 89 --statements 97 npm test"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/IrisVR/off-the-grid"
+  }, 
   "keywords": [
     "offline",
     "action",
