@@ -4,6 +4,7 @@
   "description": "Save data when there is no connection and replay back data as soon as connection established or within specified interval",
   "main": "index.js",
   "scripts": {
+    "lint": "./node_modules/.bin/eslint ./src",
     "test": "./node_modules/.bin/mocha",
     "test:watch": "./node_modules/.bin/mocha -w"
   },
@@ -22,10 +23,15 @@
     "node": ">= 6.2.0"
   },
   "devDependencies": {
+    "babel-eslint": "^7.1.1",
     "chai": "^3.5.0",
+    "eslint": "^3.14.0",
+    "eslint-config-airbnb-base": "^11.0.1",
+    "eslint-plugin-import": "^2.2.0",
     "faker": "^3.1.0",
     "mocha": "^3.2.0",
     "mock-fs": "^3.12.1",
+    "nyc": "^10.1.2",
     "sinon": "^1.17.7"
   }
 }

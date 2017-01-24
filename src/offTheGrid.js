@@ -1,4 +1,4 @@
-const Logger = require("./logger");
+const Logger = require('./logger');
 
 class OffTheGrid {
   constructor({
@@ -12,10 +12,11 @@ class OffTheGrid {
     this._interval = interval || (1000 * 60 * 30);
     this._isOnline = isOnline || false;
 
-    if (typeof replayImmediately == "undefined")
+    if (typeof replayImmediately === 'undefined') {
       this._replayImmediately = false;
-    else
+    } else {
       this._replayImmediately = replayImmediately;
+    }
 
     this._callback = callback;
 
@@ -25,10 +26,10 @@ class OffTheGrid {
     function loop() {
       if (self._isOnline) {
         self._replay();
-      } 
+      }
 
       setTimeout(loop, self._interval);
-    };
+    }
 
     if (this._isOnline && this._replayImmediately) {
       loop();
@@ -52,15 +53,16 @@ class OffTheGrid {
   _replay() {
     return this._logger.flush()
       .then((data) => {
-        if (data !== "") {
-          let dataArr = data.split("\n");
-          if (dataArr[dataArr.length - 1] === "")
+        if (data !== '') {
+          const dataArr = data.split('\n');
+          if (dataArr[dataArr.length - 1] === '') {
             dataArr.splice(-1, 1);
+          }
 
           return dataArr.map(JSON.parse);
-        } else {
-          return [];
         }
+
+        return [];
       })
       .then((data) => {
         data.forEach(this._callback);

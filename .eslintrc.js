@@ -7,6 +7,7 @@ module.exports = {
     'no-console': 'off',
     'func-names': 'off',
     'no-underscore-dangle': 'off',
+    'no-shadow': 'off',
     'camelcase': 'off',
     'no-restricted-syntax': 'off',
     'guard-for-in': 'off',

@@ -1,10 +1,10 @@
-const fs = require("fs");
+const fs = require('fs');
 
 const readFile = (path) => {
   return new Promise((resolve, reject) => {
-    fs.readFile(path, { encoding: "utf-8" }, (err, data) => {
+    fs.readFile(path, { encoding: 'utf-8' }, (err, data) => {
       if (err) return reject(err);
-      resolve(data);
+      return resolve(data);
     });
   });
 };
@@ -13,25 +13,21 @@ const deleteFile = (path) => {
   return new Promise((resolve, reject) => {
     fs.unlink(path, (err) => {
       if (err) return reject(err);
-      resolve();
+      return resolve();
     });
   });
 };
 
 const copyFile = (source, target) => {
   return new Promise((resolve, reject) => {
-    // So doesn't throw error when there's no
-    // source file
-    // fs.openSync(source, "w");
-
     let callbackCalled = false;
 
     const read = fs.createReadStream(source);
-    read.on("error", (err) => done(err));
+    read.on('error', done);
 
     const write = fs.createWriteStream(target);
-    write.on("error", (err) => done(err));
-    write.on("close", (_) => done());
+    write.on('error', done);
+    write.on('close', () => done());
 
     read.pipe(write);
 
