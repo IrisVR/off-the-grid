@@ -1,14 +1,13 @@
 const winston = require('winston');
-const AsyncLock = require('async-lock');
 const utils = require('./utils');
 
 class Logger {
   constructor(path) {
-    this._lock = new AsyncLock();
     this._reset(path);
   }
 
   _reset(path) {
+    this._isWriting = false;
     this._path = path;
     this._logger = new (winston.Logger)({
       transports: [
@@ -17,21 +16,41 @@ class Logger {
     });
   }
 
-  write(message, body) {
-    return this._lock.acquire('lock', () => {
+  write(message, body, no) {
+    const self = this;
+    function doWrite() {
+      console.log(`Writer ${no} start writing`);
+      self._isWriting = true;
+
       return new Promise((resolve, reject) => {
-        this._logger.log('info', message, { body }, (err, _type, msg, { body }) => {
+        self._logger.log('info', message, { body }, (err, _type, msg, { body }) => {
+          self._isWriting = false;
+          console.log(`Writer ${no} done writing`);
+
           if (err) return reject(err);
-          return resolve(msg, body);
+          return resolve({ message: msg, body: body });
         });
       });
-    });
+    }
+
+    function loop(resolve, reject) {
+      if (self._isWriting === false) {
+        doWrite()
+          .then(resolve)
+          .catch(reject);
+      } else {
+        setTimeout(loop, 0, resolve, reject);
+      }
+    }
+
+    return new Promise(loop);
   }
 
   flush() {
-    return this._lock.acquire('lock', () => {
-      const path = this._path;
-      const tempPath = `${this._path}.tmp`;
+    const self = this;
+    function doFlush() {
+      const path = self._path;
+      const tempPath = `${self._path}.tmp`;
 
       return Promise.all([
         utils.copyFile(path, tempPath),
@@ -39,7 +58,7 @@ class Logger {
         utils.deleteFile(path)
       ])
       .then((result) => {
-        this._reset(path);
+        self._reset(path);
         return result[1];
       })
       .catch((err) => {
@@ -49,7 +68,27 @@ class Logger {
 
         throw err;
       });
-    });
+    }
+
+    function loop(resolve, reject) {
+      if (self._isWriting === false) {
+        console.log("Flush is happening");
+        doFlush()
+          .then((data) => {
+            console.log("Success flushing")
+            resolve(data);
+          })
+          .catch((err) => {
+            console.log("Error flushing")
+            reject(err);
+          });
+      } else {
+        console.log("Flush not allowed");
+        setTimeout(loop, 0, resolve, reject);
+      }
+    }
+
+    return new Promise(loop);
   }
 
   // This method is not being used currently

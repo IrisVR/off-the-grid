@@ -53,6 +53,28 @@ describe("Logger", () => {
       });
   });
 
+  it("should write to a log file in order", () => {
+    let dataArr = [];
+    for (let i = 0; i < 5; i++) {
+      dataArr.push(generateFakeData());
+    }
+
+    dataLogPromises = dataArr.map((data) => 
+      logger.write(data.message, data.body)
+    );
+
+    return Promise.all(dataLogPromises)
+      .then(() => utils.readFile(`${mockDir}/${mockLogfile}`))
+      .then((data) => {
+        data = parse(data);
+
+        for (let i = 0; i < data.length; i++) {
+          expect(data[i].message).to.equal(dataArr[i].message);
+          expect(data[i].body).to.deep.equal(dataArr[i].body);
+        }
+      });
+  });
+
   it("should flush from a log file", () => {
     let dataArr = [];
     for (let i = 0; i < 4; i++) {
@@ -80,7 +102,41 @@ describe("Logger", () => {
       .then((data) => expect(data.length).to.equal(0));
   });
 
-  it("should not have race conditions when writing and flushing", function(done) {
+  it.only("should not have race conditions when writing and flushing", (done) => {
+    let doneCounter = 0;
+    const dataOne = generateFakeData();
+    const dataTwo = generateFakeData();
+
+    logger.write(dataOne.message, dataOne.body, "One");
+    logger.flush()
+      .then((data) => parse(data))
+      .then((data) => {
+        expect(data[0].message).to.equal(dataOne.message);
+        expect(data[0].body).to.deep.equal(dataOne.body);
+
+        doneCounter++;
+      });
+
+    logger.write(dataTwo.message, dataTwo.body, "Two");
+    logger.flush()
+      .then((data) => parse(data))
+      .then((data) => {
+        expect(data[0].message).to.equal(dataTwo.message);
+        expect(data[0].body).to.deep.equal(dataTwo.body);
+
+        doneCounter++;
+      });
+    
+    (function loop() {
+      if (doneCounter === 2) {
+        done();
+      } else {
+        setTimeout(loop, 0);
+      }
+    })();
+  });
+
+  it("should not have race conditions on stress test", (done) => {
     let doneCounter = 0;
 
     function looseWriteAndFlush(amount) {
@@ -88,8 +144,8 @@ describe("Logger", () => {
       for (let i = 0; i < amount; i++)
         dataArr.push(generateFakeData());
 
-      dataLogPromises = dataArr.map((data) => 
-        logger.write(data.message, data.body)
+      dataArr.map((data, i) => 
+        logger.write(data.message, data.body, i)
       );
 
       logger.flush()
@@ -105,11 +161,11 @@ describe("Logger", () => {
     }
 
     const stressTest = [
-      looseWriteAndFlush(100),
-      looseWriteAndFlush(300),
-      looseWriteAndFlush(50),
-      looseWriteAndFlush(130),
-      looseWriteAndFlush(70)
+      looseWriteAndFlush(1),
+      looseWriteAndFlush(1),
+      // looseWriteAndFlush(50),
+      // looseWriteAndFlush(13),
+      // looseWriteAndFlush(7)
     ];
 
     (function loop() {
