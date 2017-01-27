@@ -1,10 +1,10 @@
 const winston = require('winston');
-const AsyncLock = require('async-lock');
+const locks = require('locks');
 const utils = require('./utils');
 
 class Logger {
   constructor(path) {
-    this._lock = new AsyncLock();
+    this._mutex = locks.createMutex();
     this._reset(path);
   }
 
@@ -18,36 +18,47 @@ class Logger {
   }
 
   write(message, body) {
-    return this._lock.acquire('lock', () => {
-      return new Promise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
+      this._mutex.lock(() => {
         this._logger.log('info', message, { body }, (err, _type, msg, { body }) => {
-          if (err) return reject(err);
-          return resolve(msg, body);
+          if (err) {
+            reject(err);
+          } else {
+            resolve({ message: msg, body });
+          }
+
+          return this._mutex.unlock();
         });
       });
     });
   }
 
   flush() {
-    return this._lock.acquire('lock', () => {
-      const path = this._path;
-      const tempPath = `${this._path}.tmp`;
+    return new Promise((resolve, reject) => {
+      this._mutex.lock(() => {
+        const path = this._path;
+        const tempPath = `${this._path}.tmp`;
 
-      return Promise.all([
-        utils.copyFile(path, tempPath),
-        utils.readFile(tempPath),
-        utils.deleteFile(path)
-      ])
-      .then((result) => {
-        this._reset(path);
-        return result[1];
-      })
-      .catch((err) => {
-        if (err.code === 'ENOENT') {
-          return '';
-        }
+        return Promise.all([
+          utils.copyFile(path, tempPath),
+          utils.readFile(tempPath),
+          utils.deleteFile(path)
+        ])
+        .then((result) => {
+          this._reset(path);
+          resolve(result[1]);
 
-        throw err;
+          this._mutex.unlock();
+        })
+        .catch((err) => {
+          if (err.code === 'ENOENT') {
+            resolve('');
+            this._mutex.unlock();
+          } else {
+            reject(err);
+            this._mutex.unlock();
+          }
+        });
       });
     });
   }
