@@ -1,13 +1,14 @@
 const winston = require('winston');
+const locks = require('locks');
 const utils = require('./utils');
 
 class Logger {
   constructor(path) {
+    this._mutex = locks.createMutex();
     this._reset(path);
   }
 
   _reset(path) {
-    this._isWriting = false;
     this._path = path;
     this._logger = new (winston.Logger)({
       transports: [
@@ -16,79 +17,50 @@ class Logger {
     });
   }
 
-  write(message, body, no) {
-    const self = this;
-    function doWrite() {
-      console.log(`Writer ${no} start writing`);
-      self._isWriting = true;
+  write(message, body) {
+    return new Promise((resolve, reject) => {
+      this._mutex.lock(() => {
+        this._logger.log('info', message, { body }, (err, _type, msg, { body }) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve({ message: msg, body });
+          }
 
-      return new Promise((resolve, reject) => {
-        self._logger.log('info', message, { body }, (err, _type, msg, { body }) => {
-          self._isWriting = false;
-          console.log(`Writer ${no} done writing`);
-
-          if (err) return reject(err);
-          return resolve({ message: msg, body: body });
+          return this._mutex.unlock();
         });
       });
-    }
-
-    function loop(resolve, reject) {
-      if (self._isWriting === false) {
-        doWrite()
-          .then(resolve)
-          .catch(reject);
-      } else {
-        setTimeout(loop, 0, resolve, reject);
-      }
-    }
-
-    return new Promise(loop);
+    });
   }
 
   flush() {
-    const self = this;
-    function doFlush() {
-      const path = self._path;
-      const tempPath = `${self._path}.tmp`;
+    return new Promise((resolve, reject) => {
+      this._mutex.lock(() => {
+        const path = this._path;
+        const tempPath = `${this._path}.tmp`;
 
-      return Promise.all([
-        utils.copyFile(path, tempPath),
-        utils.readFile(tempPath),
-        utils.deleteFile(path)
-      ])
-      .then((result) => {
-        self._reset(path);
-        return result[1];
-      })
-      .catch((err) => {
-        if (err.code === 'ENOENT') {
-          return '';
-        }
+        return Promise.all([
+          utils.copyFile(path, tempPath),
+          utils.readFile(tempPath),
+          utils.deleteFile(path)
+        ])
+        .then((result) => {
+          this._reset(path);
+          resolve(result[1]);
 
-        throw err;
-      });
-    }
-
-    function loop(resolve, reject) {
-      if (self._isWriting === false) {
-        console.log("Flush is happening");
-        doFlush()
-          .then((data) => {
-            console.log("Success flushing")
-            resolve(data);
-          })
-          .catch((err) => {
-            console.log("Error flushing")
+          this._mutex.unlock();
+        })
+        .catch((err) => {
+          if (err.code === 'ENOENT') {
+            resolve('');
+            this._mutex.unlock();
+          } else {
             reject(err);
-          });
-      } else {
-        console.log("Flush not allowed");
-        setTimeout(loop, 0, resolve, reject);
-      }
-    }
-
-    return new Promise(loop);
+            this._mutex.unlock();
+          }
+        });
+      });
+    });
   }
 
   // This method is not being used currently

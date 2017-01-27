@@ -86,23 +86,24 @@ describe("Logger", () => {
     );
 
     return Promise.all(dataLogPromises)
-    .then(() => logger.flush())
-    .then((data) => parse(data))
-    .then((data) => {
-      for (let i = 0; i < data.length; i++) {
-        expect(data[i].message).to.equal(dataArr[i].message);
-        expect(data[i].body).to.deep.equal(dataArr[i].body);
-      }
-    });
+      .then(() => logger.flush())
+      .then((data) => parse(data))
+      .then((data) => {
+        for (let i = 0; i < data.length; i++) {
+          expect(data[i].message).to.equal(dataArr[i].message);
+          expect(data[i].body).to.deep.equal(dataArr[i].body);
+        }
+      });
   });
 
   it("should not throw error when flushing from an empty file", () => {
     return logger.flush()
       .then((data) => parse(data))
-      .then((data) => expect(data.length).to.equal(0));
+      .then((data) => expect(data.length).to.equal(0))
+      .catch(console.log);
   });
 
-  it.only("should not have race conditions when writing and flushing", (done) => {
+  it("should not have race conditions when writing and flushing", (done) => {
     let doneCounter = 0;
     const dataOne = generateFakeData();
     const dataTwo = generateFakeData();
@@ -161,11 +162,11 @@ describe("Logger", () => {
     }
 
     const stressTest = [
-      looseWriteAndFlush(1),
-      looseWriteAndFlush(1),
-      // looseWriteAndFlush(50),
-      // looseWriteAndFlush(13),
-      // looseWriteAndFlush(7)
+      looseWriteAndFlush(100),
+      looseWriteAndFlush(30),
+      looseWriteAndFlush(50),
+      looseWriteAndFlush(130),
+      looseWriteAndFlush(70)
     ];
 
     (function loop() {

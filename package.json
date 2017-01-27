@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "lint": "./node_modules/.bin/eslint ./src",
-    "test": "./node_modules/.bin/mocha ./test/logger.test.js",
+    "test": "./node_modules/.bin/mocha",
     "test:watch": "./node_modules/.bin/mocha -w",
     "coverage": "./node_modules/.bin/nyc npm test",
     "validate": "./node_modules/.bin/npm-run-all --parallel lint coverage",
@@ -27,8 +27,7 @@
   },
   "license": "MIT",
   "dependencies": {
-    "async-lock": "^0.3.9",
-    "rwlock": "^5.0.0",
+    "locks": "^0.2.2",
     "winston": "^2.3.0"
   },
   "engines": {
@@ -61,6 +60,8 @@
       "path": "./node_modules/cz-conventional-changelog"
     },
     "ghooks": {
+      "pre-commit": "npm run validate",
+      "commit-msg": "./node_modules/.bin/validate-commit-msg"
     }
   }
 }
