@@ -26,10 +26,7 @@
     "email": "christianmsakai@gmail.com"
   },
   "license": "MIT",
-  "dependencies": {
-    "async-lock": "^0.3.9",
-    "winston": "^2.3.0"
-  },
+  "dependencies": {},
   "engines": {
     "node": ">= 6.2.0"
   },

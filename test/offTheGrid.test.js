@@ -50,12 +50,12 @@ describe("OffTheGrid", () => {
       callback: () => {}
     });
 
-    return offTheGrid.record(fakeData.message, fakeData.body)
+    return offTheGrid.record(fakeData)
       .then(() => utils.readFile(`${mockDir}/${mockLogfile}`))
-      .then((data) => parse(data))
-      .then((data) => {
-        expect(data[0].message).to.equal(fakeData.message);
-        expect(data[0].body).to.deep.equal(fakeData.body);
+      .then((result) => parse(result))
+      .then((result) => {
+        expect(result[0].data).to.deep.equal(fakeData);
+        expect(result[0].timestamp).to.exist;
       });
   });
 
@@ -99,8 +99,7 @@ describe("OffTheGrid", () => {
       isOnline: false,
       replayImmediately: false,
       callback: (data) => {
-        expect(data.message).to.equal(fakeData.message);
-        expect(data.body).to.deep.equal(fakeData.body);
+        expect(data).to.deep.equal(fakeData);
 
         done();
       }
@@ -187,6 +186,7 @@ describe("OffTheGrid", () => {
 
       setTimeout(() => {
         expect(spy.called).to.equal(true);
+        expect(spy.args[0][0]).to.deep.equal(fakeData);
         done();
       }, 100);
 
@@ -204,39 +204,38 @@ describe("OffTheGrid", () => {
       mock.restore();
     });
 
-  it("should record data instead of replaying data when it becomes offline", (done) => {
-    const fakeDataOnline = generateFakeData();
+    it("should record data instead of replaying data when it becomes offline", (done) => {
+      const fakeDataOnline = generateFakeData();
 
-    mock({
-      [mockDir]: {}
+      mock({
+        [mockDir]: {}
+      });
+
+      offTheGrid = new OffTheGrid({
+        logFilePath: `${mockDir}/${mockLogfile}`,
+        interval: 10,
+        isOnline: true,
+        replayImmediately: true,
+        callback: () => {}
+      });
+
+      offTheGrid.record(fakeDataOnline);
+
+      setTimeout(() => {
+        offTheGrid.setOffline();
+
+        const fakeDataOffline = generateFakeData();
+
+        offTheGrid.record(fakeDataOffline)
+          .then(() => utils.readFile(`${mockDir}/${mockLogfile}`))
+          .then(parse)
+          .then((result) => {
+            expect(result[0].data).to.deep.equal(fakeDataOffline);
+
+            done();
+          });
+      }, 200);
     });
-
-    offTheGrid = new OffTheGrid({
-      logFilePath: `${mockDir}/${mockLogfile}`,
-      interval: 10,
-      isOnline: true,
-      replayImmediately: true,
-      callback: () => {}
-    });
-
-    offTheGrid.record(fakeDataOnline.message, fakeDataOnline.Body);
-
-    setTimeout(() => {
-      offTheGrid.setOffline();
-
-      const fakeDataOffline = generateFakeData();
-
-      offTheGrid.record(fakeDataOffline.message, fakeDataOffline.body)
-        .then(() => utils.readFile(`${mockDir}/${mockLogfile}`))
-        .then((data) => parse(data))
-        .then((data) => {
-          expect(data[0].message).to.equal(fakeDataOffline.message);
-          expect(data[0].body).to.deep.equal(fakeDataOffline.body);
-
-          done();
-        });
-    }, 20);
-  });
 
     it("should record when offline and NOT replay when offline within a specified interval", (done) => {
       const spy = sinon.spy();
@@ -255,7 +254,7 @@ describe("OffTheGrid", () => {
       for (let i = 0; i < 3; i++) {
         fakeData = generateFakeData();
         fakeDataArr.push(fakeData);
-        offTheGrid.record(fakeData.message, fakeData.body);
+        offTheGrid.record(fakeData);
       }
 
       setTimeout(() => {
@@ -264,9 +263,12 @@ describe("OffTheGrid", () => {
       }, 1500);
     });
 
+
     it("should record when offline and flush when online within a specified interval", (done) => {
       const spy = sinon.spy();
-      const callback = (data) => spy(data);
+      const callback = (data) => {
+        spy();
+      };
 
       offTheGrid = new OffTheGrid({
         logFilePath: `${mockDir}/${mockLogfile}`,
@@ -281,7 +283,7 @@ describe("OffTheGrid", () => {
       for (let i = 0; i < 3; i++) {
         fakeData = generateFakeData();
         fakeDataArr.push(fakeData);
-        offTheGrid.record(fakeData.message, fakeData.body);
+        offTheGrid.record(fakeData);
       }
 
       offTheGrid.setOnline();
