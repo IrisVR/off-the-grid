@@ -1,8 +1,17 @@
 const fs = require('fs');
 
+const appendFile = (path, data) => {
+  return new Promise((resolve, reject) => {
+    fs.appendFile(path, `${data}\n`, { encoding: 'utf8' }, (err) => {
+      if (err) return reject(err);
+      return resolve();
+    });
+  });
+};
+
 const readFile = (path) => {
   return new Promise((resolve, reject) => {
-    fs.readFile(path, { encoding: 'utf-8' }, (err, data) => {
+    fs.readFile(path, { encoding: 'utf8' }, (err, data) => {
       if (err) return reject(err);
       return resolve(data);
     });
@@ -45,6 +54,7 @@ const copyFile = (source, target) => {
 };
 
 module.exports = {
+  appendFile,
   readFile,
   deleteFile,
   copyFile

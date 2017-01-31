@@ -9,12 +9,25 @@ const mockDir = "./_mock";
 const mockLogfile = "_mock.log";
 let logger;
 
+function generatePerson() {
+  return {
+    name: faker.internet.userName(),
+    email: faker.internet.email(),
+  }
+}
+
 function generateFakeData() {
+  const neighbors = [];
+  for (var i = 0; i < 100; i++) {
+    neighbors.push(generatePerson());
+  }
+
   return {
     message: faker.lorem.text(),
     body: {
       name: faker.internet.userName(),
-      email: faker.internet.email()
+      email: faker.internet.email(),
+      neighbors: neighbors
     }
   };
 }
@@ -45,11 +58,12 @@ describe("Logger", () => {
   it("should write to a log file", () => {
     const fakeData = generateFakeData();
 
-    logger.write(fakeData.message, fakeData.body)
+    return logger.log(fakeData)
       .then(() => utils.readFile(`${mockDir}/${mockLogfile}`))
-      .then((data) => {
-        expect(data.message).to.equal(fakeData.message);
-        expect(data.body).to.deep.equal(fakeData.body);
+      .then(parse)
+      .then((result) => {
+        expect(result[0].data).to.deep.equal(fakeData);
+        expect(result[0].timestamp).to.exist;
       });
   });
 
@@ -60,17 +74,16 @@ describe("Logger", () => {
     }
 
     dataLogPromises = dataArr.map((data) => 
-      logger.write(data.message, data.body)
+      logger.log(data)
     );
 
     return Promise.all(dataLogPromises)
       .then(() => utils.readFile(`${mockDir}/${mockLogfile}`))
-      .then((data) => {
-        data = parse(data);
+      .then((result) => {
+        result = parse(result);
 
-        for (let i = 0; i < data.length; i++) {
-          expect(data[i].message).to.equal(dataArr[i].message);
-          expect(data[i].body).to.deep.equal(dataArr[i].body);
+        for (let i = 0; i < result.length; i++) {
+          expect(result[i].data).to.deep.equal(dataArr[i]);
         }
       });
   });
@@ -82,25 +95,24 @@ describe("Logger", () => {
     }
 
     dataLogPromises = dataArr.map((data) => 
-      logger.write(data.message, data.body)
+      logger.log(data)
     );
 
     return Promise.all(dataLogPromises)
       .then(() => logger.flush())
-      .then((data) => parse(data))
-      .then((data) => {
-        for (let i = 0; i < data.length; i++) {
-          expect(data[i].message).to.equal(dataArr[i].message);
-          expect(data[i].body).to.deep.equal(dataArr[i].body);
+      .then((result) => parse(result))
+      .then((result) => {
+        for (let i = 0; i < result.length; i++) {
+          expect(result[i].data).to.deep.equal(dataArr[i]);
+          expect(result[i].timestamp).to.exist;
         }
       });
   });
 
   it("should not throw error when flushing from an empty file", () => {
     return logger.flush()
-      .then((data) => parse(data))
-      .then((data) => expect(data.length).to.equal(0))
-      .catch(console.log);
+      .then(parse)
+      .then((data) => expect(data.length).to.equal(0));
   });
 
   it("should not have race conditions when writing and flushing", (done) => {
@@ -108,22 +120,20 @@ describe("Logger", () => {
     const dataOne = generateFakeData();
     const dataTwo = generateFakeData();
 
-    logger.write(dataOne.message, dataOne.body, "One");
+    logger.log(dataOne, "One");
     logger.flush()
-      .then((data) => parse(data))
-      .then((data) => {
-        expect(data[0].message).to.equal(dataOne.message);
-        expect(data[0].body).to.deep.equal(dataOne.body);
+      .then((result) => parse(result))
+      .then((result) => {
+        expect(result[0].data).to.deep.equal(dataOne);
 
         doneCounter++;
       });
 
-    logger.write(dataTwo.message, dataTwo.body, "Two");
+    logger.log(dataTwo, "Two");
     logger.flush()
-      .then((data) => parse(data))
-      .then((data) => {
-        expect(data[0].message).to.equal(dataTwo.message);
-        expect(data[0].body).to.deep.equal(dataTwo.body);
+      .then((result) => parse(result))
+      .then((result) => {
+        expect(result[0].data).to.deep.equal(dataTwo);
 
         doneCounter++;
       });
@@ -145,16 +155,16 @@ describe("Logger", () => {
       for (let i = 0; i < amount; i++)
         dataArr.push(generateFakeData());
 
-      dataArr.map((data, i) => 
-        logger.write(data.message, data.body, i)
+      dataLogPromises = dataArr.map((data) => 
+        logger.log(data)
       );
 
       logger.flush()
-        .then((data) => parse(data))
-        .then((data) => {
-          for (let i = 0; i < data.length; i++) {
-            expect(data[i].message).to.equal(dataArr[i].message);
-            expect(data[i].body).to.deep.equal(dataArr[i].body);
+        .then((result) => parse(result))
+        .then((result) => {
+          for (let i = 0; i < result.length; i++) {
+            expect(result[i].data).to.deep.equal(dataArr[i]);
+            expect(result[i].timestamp).to.exist;
           }
 
           doneCounter++;
@@ -162,10 +172,10 @@ describe("Logger", () => {
     }
 
     const stressTest = [
-      looseWriteAndFlush(100),
+      looseWriteAndFlush(10),
       looseWriteAndFlush(30),
       looseWriteAndFlush(50),
-      looseWriteAndFlush(130),
+      looseWriteAndFlush(13),
       looseWriteAndFlush(70)
     ];
 

@@ -22,6 +22,17 @@ describe("utils", () => {
       .then((data) => expect(data).equal("This is a file"));
   });
 
+  it("should append a file", () => {
+    mock({
+      [mockDir]: {}
+    });
+
+    return utils.appendFile(`${mockDir}/file.txt`, "Hello")
+      .then(() => utils.appendFile(`${mockDir}/file.txt`, "Christian Sakai"))
+      .then(() => utils.readFile(`${mockDir}/file.txt`))
+      .then((data) => expect(data).equal("Hello\nChristian Sakai\n"));
+  });
+
   it("should delete a file", () => {
     mock({
       [mockDir]: {

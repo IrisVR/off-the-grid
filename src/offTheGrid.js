@@ -46,26 +46,26 @@ class OffTheGrid {
     this._isOnline = false;
   }
 
-  record(message, body) {
-    return this._logger.write(message, body);
+  record(data) {
+    return this._logger.log(data);
   }
 
   _replay() {
     return this._logger.flush()
-      .then((data) => {
-        if (data !== '') {
-          const dataArr = data.split('\n');
-          if (dataArr[dataArr.length - 1] === '') {
-            dataArr.splice(-1, 1);
+      .then((result) => {
+        if (result !== '') {
+          const resultArr = result.split('\n');
+          if (resultArr[resultArr.length - 1] === '') {
+            resultArr.splice(-1, 1);
           }
 
-          return dataArr.map(JSON.parse);
+          return resultArr.map(JSON.parse);
         }
 
         return [];
       })
-      .then((data) => {
-        data.forEach(this._callback);
+      .then((result) => {
+        result.forEach(this._callback);
       });
   }
 }
