@@ -5,7 +5,7 @@ const expect = chai.expect;
 
 let mutex;
 
-describe("utils", () => {
+describe("Mutex", () => {
   it("should acquire only for one function", (done) => {
     const mutex = new Mutex();
     const spyOne = sinon.spy();
