@@ -1,5 +1,21 @@
 const Logger = require('./logger');
 
+function parseJSON(el) {
+  let parsed;
+  try {
+    parsed = JSON.parse(el);
+  } catch (e) {
+    parsed = {};
+  }
+
+  return parsed;
+}
+
+function filterOutEmptyData(el) {
+  return (Object.keys(el).length !== 0 &&
+          el.constructor === Object);
+}
+
 class OffTheGrid {
   constructor({
     logFilePath,
@@ -53,16 +69,14 @@ class OffTheGrid {
   _replay() {
     return this._logger.flush()
       .then((result) => {
-        if (result !== '') {
-          const resultArr = result.split('\n');
-          if (resultArr[resultArr.length - 1] === '') {
-            resultArr.splice(-1, 1);
-          }
+        const resultArr = result.split('\n');
 
-          return resultArr.map(JSON.parse);
+        if (resultArr[resultArr.length - 1] === '') {
+          resultArr.splice(-1, 1);
         }
 
-        return [];
+        return resultArr.map(parseJSON)
+        .filter(filterOutEmptyData);
       })
       .then((result) => {
         result.forEach(this._callback);
