@@ -88,6 +88,20 @@ describe("Logger", () => {
       });
   });
 
+  it("should not crash when writing potentially weird data to a log file", () => {
+    const troublingData = "<1#@$%^&*)(div>foo</1#@$%^&*)(di1#@$%^&*)(v>";
+
+    return logger.log(troublingData)
+      .then(() => utils.readFile(`${mockDir}/${mockLogfile}`))
+      .then((result) => {
+        result = parse(result);
+
+        for (let i = 0; i < result.length; i++) {
+          expect(result[i].data).to.deep.equal(troublingData);
+        }
+      })
+  });
+
   it("should flush from a log file", () => {
     let dataArr = [];
     for (let i = 0; i < 4; i++) {

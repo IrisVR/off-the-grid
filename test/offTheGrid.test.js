@@ -59,7 +59,31 @@ describe("OffTheGrid", () => {
       });
   });
 
-  it("should flush data from an empty log file and not applying it to the callback", (done) => {
+  it("should flush data from a log file and apply it to the callback", (done) => {
+    const fakeData = generateFakeData();
+
+    mock({
+      [mockDir]: {
+        [mockLogfile]: JSON.stringify(fakeData)
+      }
+    });
+
+    offTheGrid = new OffTheGrid({
+      logFilePath: `${mockDir}/${mockLogfile}`,
+      interval: 100000,
+      isOnline: false,
+      replayImmediately: false,
+      callback: (data) => {
+        expect(data).to.deep.equal(fakeData);
+
+        done();
+      }
+    });
+    
+    offTheGrid._replay();
+  });
+
+  it("should flush data from a non-existent log file and not applying it to the callback", (done) => {
     mock({
       [mockDir]: {}
     });
@@ -84,28 +108,116 @@ describe("OffTheGrid", () => {
     offTheGrid._replay();
   });
 
-  it("should flush data from a log file and apply it to the callback", (done) => {
-    const fakeData = generateFakeData();
-
+  it("should flush data from an empty log file and not applying it to the callback", (done) => {
     mock({
       [mockDir]: {
-        [mockLogfile]: JSON.stringify(fakeData)
+        [mockLogfile]: ""
       }
     });
+
+    let isCalled = false;
 
     offTheGrid = new OffTheGrid({
       logFilePath: `${mockDir}/${mockLogfile}`,
       interval: 100000,
       isOnline: false,
       replayImmediately: false,
-      callback: (data) => {
-        expect(data).to.deep.equal(fakeData);
-
-        done();
+      callback: () => {
+        isCalled = true;
       }
     });
+
+    setTimeout(() => {
+      expect(isCalled).to.equal(false);
+      done();
+    }, 100);
     
     offTheGrid._replay();
+  });
+
+  describe("when encountering corrupt", () => {
+    it("should not crash when flushing data from a fully corrupted log file", (done) => {
+      const corruptedData = "!@#$@$HSS-shsgk_#$^!%(@$sfsfgsafkjal12";
+
+      mock({
+        [mockDir]: {
+          [mockLogfile]: corruptedData
+        }
+      });
+
+      let isCalled = false;
+
+      offTheGrid = new OffTheGrid({
+        logFilePath: `${mockDir}/${mockLogfile}`,
+        interval: 100000,
+        isOnline: false,
+        replayImmediately: false,
+        callback: (result) => {
+          isCalled = true;
+        }
+      });
+
+      setTimeout(() => {
+        expect(isCalled).to.equal(false);
+        done();
+      }, 100);
+
+      offTheGrid._replay();
+    });
+
+    it("should not crash when flushing data from a REAL fully corrupted log file", (done) => {
+      let isCalled = false;
+
+      offTheGrid = new OffTheGrid({
+        logFilePath: `./corruptedAnalytics.txt`,
+        interval: 100000,
+        isOnline: false,
+        replayImmediately: false,
+        callback: (result) => {
+          isCalled = true;
+        }
+      });
+
+      setTimeout(() => {
+        expect(isCalled).to.equal(false);
+        done();
+      }, 100);
+
+      offTheGrid._replay();
+    });
+
+    it("should not crash when flushing data from a partially corrupted log file and only apply the clean data", (done) => {
+      const corruptedData = "!@#$@$HSS-shsgk_#$^!%(@$sfsfgsafkjal12";
+      const cleanData = generateFakeData();
+      const data = corruptedData + "\n" + JSON.stringify(cleanData);
+
+      mock({
+        [mockDir]: {
+          [mockLogfile]: data
+        }
+      });
+
+      const spy = sinon.spy();
+      const callback = (data) => spy(data);
+
+      let isCalled = false;
+
+      offTheGrid = new OffTheGrid({
+        logFilePath: `${mockDir}/${mockLogfile}`,
+        interval: 100000,
+        isOnline: false,
+        replayImmediately: false,
+        callback: callback
+      });
+
+      setTimeout(() => {
+        expect(spy.called).to.equal(true);
+        expect(spy.args[0][0]).to.deep.equal(cleanData);
+        done();
+      }, 100);
+
+      offTheGrid._replay();
+    });
   });
 
   describe("during instantiation", () => {
