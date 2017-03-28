@@ -38,14 +38,25 @@ class Logger {
         const path = this._path;
         const tempPath = `${this._path}.tmp`;
 
-        Promise.all([
-          utils.copyFile(path, tempPath),
-          utils.readFile(tempPath),
-          utils.deleteFile(path)
-        ])
+        // Sequentially execute these tasks
+        function copyFile() {
+          return utils.copyFile(path, tempPath);
+        }
+
+        function readFile() {
+          return utils.readFile(tempPath);
+        }
+
+        function deleteFile(result) {
+          return utils.deleteFile(path)
+            .then(() => result);
+        }
+
+        [copyFile, readFile, deleteFile]
+        .reduce((p, fn) => p.then(fn), Promise.resolve())
         .then((result) => {
           this._reset(path);
-          resolve(result[1]);
+          resolve(result);
           this._mutex.release();
         })
         .catch((err) => {

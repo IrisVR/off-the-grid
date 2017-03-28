@@ -161,7 +161,9 @@ describe("Logger", () => {
     })();
   });
 
-  it("should not have race conditions on stress test", (done) => {
+  it("should not have race conditions on stress test", function(done) {
+    this.timeout(10000);
+
     let doneCounter = 0;
 
     function looseWriteAndFlush(amount) {
@@ -176,6 +178,8 @@ describe("Logger", () => {
       logger.flush()
         .then((result) => parse(result))
         .then((result) => {
+          expect(result.length).to.equal(amount);
+
           for (let i = 0; i < result.length; i++) {
             expect(result[i].data).to.deep.equal(dataArr[i]);
             expect(result[i].timestamp).to.exist;
@@ -186,11 +190,11 @@ describe("Logger", () => {
     }
 
     const stressTest = [
-      looseWriteAndFlush(10),
-      looseWriteAndFlush(30),
-      looseWriteAndFlush(50),
-      looseWriteAndFlush(13),
-      looseWriteAndFlush(70)
+      looseWriteAndFlush(100),
+      looseWriteAndFlush(300),
+      looseWriteAndFlush(500),
+      looseWriteAndFlush(130),
+      looseWriteAndFlush(700)
     ];
 
     (function loop() {
