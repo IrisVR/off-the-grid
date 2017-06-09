@@ -19,47 +19,63 @@ function filterOutEmptyData(el) {
 class OffTheGrid {
   constructor({
     logFilePath,
-    interval,
-    isOnline,
     replayImmediately,
+    flushInterval,
+    cacheSize,
+    checkConditionBeforeFlush,
     callback
   }) {
-    this._logFilePath = logFilePath;
-    this._interval = interval || (1000 * 60 * 30);
-    this._isOnline = isOnline || false;
+    this._logFilePath = logFilePath || process.cwd();
+    this._replayImmediately = replayImmediately || false;
+    this._flushInterval = flushInterval || (1000 * 60 * 30); // 30 mins
+    this._cacheSize = cacheSize || 10000000; // 10 MB
 
-    if (typeof replayImmediately === 'undefined') {
-      this._replayImmediately = false;
-    } else {
-      this._replayImmediately = replayImmediately;
-    }
+    this._checkerFunction = checkConditionBeforeFlush;
 
-    this._callback = callback;
+    this._checkConditionBeforeFlush = () => {
+      return new Promise((resolve) => {
+        if (this._checkerFunction === null ||
+            typeof this._checkerFunction === 'undefined') {
+          return resolve(true);
+        }
 
-    this._logger = new Logger(logFilePath);
+        return resolve(this._checkerFunction());
+      });
+    };
+
+    this._callback = callback || (() => {});
+
+    this._logger = new Logger(logFilePath, this._cacheSize);
+
+    // for testing purposes
+    // we need to clear all the timeouts
+    this._timeouts = [];
 
     const self = this;
     function loop() {
-      if (self._isOnline) {
-        self._replay();
-      }
+      self._checkConditionBeforeFlush()
+        .then((conditionSatisfied) => {
+          if (conditionSatisfied) {
+            return self._replay();
+          }
 
-      setTimeout(loop, self._interval);
+          return self._logger.destroyIfLogFileSizeTooBig();
+        });
+
+      self._timeouts.push(setTimeout(loop, self._flushInterval));
     }
 
-    if (this._isOnline && this._replayImmediately) {
+    if (this._replayImmediately) {
       loop();
     } else {
-      setTimeout(loop, this._interval);
+      this._timeouts.push(setTimeout(loop, this._flushInterval));
     }
   }
 
-  setOnline() {
-    this._isOnline = true;
-  }
-
-  setOffline() {
-    this._isOnline = false;
+  _clearTimeouts() {
+    this._timeouts.forEach((timeout) => {
+      clearTimeout(timeout);
+    });
   }
 
   record(data) {
@@ -79,7 +95,7 @@ class OffTheGrid {
         .filter(filterOutEmptyData);
       })
       .then((result) => {
-        result.forEach(this._callback);
+        return result.forEach(this._callback);
       });
   }
 }

@@ -7,7 +7,7 @@
 
 When using 3rd party data analytics service in an offline capable app such as when using Electron, constant internet connection is required to keep sending data to the analytics service. When the internet connection drops out, we can't send data to the service, resulting in data loss. 
 
-__Off the Grid__ is designed to handle this scenario. The basic idea is, __Off the Grid__ will cache the data when our app is offline and will replay the data back when our app is online.
+__Off the Grid__ is designed to handle this scenario. The basic idea is, __Off the Grid__ will cache the data if our app is offline and will send the data if our app is online.
 
 1. [Getting Started](#getting-started)
 2. [API](#api)
@@ -37,26 +37,20 @@ let offTheGrid;
 
 const { ipcMain } = electron;
 
-ipcMain.on("prepareAnalytics", (event, isOnline) => {
-  initializeOffTheGridAnalytics(isOnline);
+ipcMain.on("prepareAnalytics", (event) => {
+  initializeOffTheGridAnalytics();
 });
-
-ipcMain.on('netStatus', (event, data) => {
-  if (data === "online")
-    offTheGrid.setOnline();
-  else if (data === "offline")
-    offTheGrid.setOffline();
-})
 
 ipcMain.on('actions', (event, data) => {
   offTheGrid.record(data.type, data.content);
 })
 
-function initializeOffLineAnalytics(isOnline) {
+function initializeOffLineAnalytics() {
   offTheGrid = new OffTheGrid({
     logFilePath: "pathToLogFile.log",
-    interval: (1000 * 60 * 30),
-    isOnline: isOnline,               
+    flushInterval: (1000 * 60 * 30),
+    cacheSize: 10000000,                            // log file size of 10 MB
+    checkConditionBeforeFlush: checkInternetConn(), // returns a promise
     replayImmediately: true,           
     callback: (data) => {
       // Do something with the data here
@@ -77,13 +71,17 @@ Instantiates a new `OffTheGrid` object, with `opts`:
 
   Path to log file. Make sure the parent folders are created prior.
 
-* `interval`
+* `flushInterval`
 
   Time interval specified in miliseconds to replay the cached data and give it to the callback.
 
-* `isOnline`
+* `cacheSize`
 
-  Current status of internet connection.
+  Maximum log file size. If it exceeds this size, the log file will be deleted on the next interval when at that time the condition is not satisfied.
+
+* `checkConditionBeforeFlush`
+
+  Function to check current status of internet connection.
 
 * `replayImmediately`
 
@@ -91,17 +89,9 @@ Instantiates a new `OffTheGrid` object, with `opts`:
 
 * `callback(data) {}`
 
-  Callback to be called when replaying each cached data. This library is using [winston](https://github.com/winstonjs/winston) to help logging the data. For each replayed data, there are additional informations that is `winston` related (e.g., timestamp).
+  Callback to be called when replaying each cached data. 
 
 ### Methods
-
-* `setOffline()`
-
-  Update the current status of internet connection to offline.
-
-* `setOnline()`
-
-  Update the current status of internet connection to online.
 
 * `record(message, body)`
 

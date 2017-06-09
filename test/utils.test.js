@@ -22,6 +22,19 @@ describe("utils", () => {
       .then((data) => expect(data).equal("This is a file"));
   });
 
+  it("should read a file size", () => {
+    mock({
+      [mockDir]: {
+        "file.txt": "This is a file"
+      }
+    });
+
+    return utils.readFileSize(`${mockDir}/file.txt`)
+      .then((size) => {
+        expect(size).equal(14);
+      });
+  });
+
   it("should append a file", () => {
     mock({
       [mockDir]: {}
