@@ -48,7 +48,7 @@ describe("Logger", () => {
       [mockDir]: {}
     });
 
-    logger = new Logger(`${mockDir}/${mockLogfile}`);
+    logger = new Logger(`${mockDir}/${mockLogfile}`, 100000);
   });
 
   afterEach(() => {
@@ -120,6 +120,42 @@ describe("Logger", () => {
           expect(result[i].data).to.deep.equal(dataArr[i]);
           expect(result[i].timestamp).to.exist;
         }
+      });
+  });
+
+  it("should delete the log file if it exceeds the capacity", () => {
+    logger._maxLogSize = 10;
+
+    let dataArr = [];
+    for (let i = 0; i < 4; i++) {
+      dataArr.push(generateFakeData());
+    }
+
+    dataLogPromises = dataArr.map((data) => 
+      logger.log(data)
+    );
+
+    return Promise.all(dataLogPromises)
+      .then(() => logger.destroyIfLogFileSizeTooBig())
+      .then((result) => {
+        expect(result).to.be.true;
+      });
+  });
+
+  it("should not delete the log file if it does not exceed the capacity", () => {
+    let dataArr = [];
+    for (let i = 0; i < 4; i++) {
+      dataArr.push(generateFakeData());
+    }
+
+    dataLogPromises = dataArr.map((data) => 
+      logger.log(data)
+    );
+
+    return Promise.all(dataLogPromises)
+      .then(() => logger.destroyIfLogFileSizeTooBig())
+      .then((result) => {
+        expect(result).to.be.false;
       });
   });
 
