@@ -1,3 +1,5 @@
+'use strict';
+
 const Logger = require('./logger');
 
 function parseJSON(el) {
@@ -17,20 +19,13 @@ function filterOutEmptyData(el) {
 }
 
 class OffTheGrid {
-  constructor({
-    logFilePath,
-    replayImmediately,
-    flushInterval,
-    cacheSize,
-    checkConditionBeforeFlush,
-    callback
-  }) {
-    this._logFilePath = logFilePath || process.cwd();
-    this._replayImmediately = replayImmediately || false;
-    this._flushInterval = flushInterval || (1000 * 60 * 30); // 30 mins
-    this._cacheSize = cacheSize || 10000000; // 10 MB
+  constructor(options) {
+    this._logFilePath = options.logFilePath || process.cwd();
+    this._replayImmediately = options.replayImmediately || false;
+    this._flushInterval = options.flushInterval || (1000 * 60 * 30); // 30 mins
+    this._cacheSize = options.cacheSize || 10000000; // 10 MB
 
-    this._checkerFunction = checkConditionBeforeFlush;
+    this._checkerFunction = options.checkConditionBeforeFlush;
 
     this._checkConditionBeforeFlush = () => {
       return new Promise((resolve) => {
@@ -43,9 +38,9 @@ class OffTheGrid {
       });
     };
 
-    this._callback = callback || (() => {});
+    this._callback = options.callback || (() => {});
 
-    this._logger = new Logger(logFilePath, this._cacheSize);
+    this._logger = new Logger(options.logFilePath, this._cacheSize);
 
     // for testing purposes
     // we need to clear all the timeouts
@@ -92,7 +87,7 @@ class OffTheGrid {
         }
 
         return resultArr.map(parseJSON)
-        .filter(filterOutEmptyData);
+          .filter(filterOutEmptyData);
       })
       .then((result) => {
         return result.forEach(this._callback);

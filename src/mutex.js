@@ -1,3 +1,5 @@
+'use strict';
+
 class Mutex {
   constructor() {
     this._isAcquired = false;

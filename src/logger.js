@@ -1,3 +1,5 @@
+'use strict';
+
 const Mutex = require('./mutex');
 const utils = require('./utils');
 

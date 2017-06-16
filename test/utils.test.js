@@ -1,4 +1,6 @@
-const fs = require("fs");
+'use strict';
+
+const fs = require("fs-extra");
 const chai = require("chai");
 const mock = require("mock-fs");
 const expect = chai.expect;
