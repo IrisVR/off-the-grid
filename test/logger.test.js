@@ -1,3 +1,5 @@
+'use strict';
+
 const chai = require("chai");
 const mock = require("mock-fs");
 const faker = require("faker");
@@ -73,7 +75,7 @@ describe("Logger", () => {
       dataArr.push(generateFakeData());
     }
 
-    dataLogPromises = dataArr.map((data) => 
+    const dataLogPromises = dataArr.map((data) => 
       logger.log(data)
     );
 
@@ -108,7 +110,7 @@ describe("Logger", () => {
       dataArr.push(generateFakeData());
     }
 
-    dataLogPromises = dataArr.map((data) => 
+    const dataLogPromises = dataArr.map((data) => 
       logger.log(data)
     );
 
@@ -131,7 +133,7 @@ describe("Logger", () => {
       dataArr.push(generateFakeData());
     }
 
-    dataLogPromises = dataArr.map((data) => 
+    const dataLogPromises = dataArr.map((data) => 
       logger.log(data)
     );
 
@@ -148,7 +150,7 @@ describe("Logger", () => {
       dataArr.push(generateFakeData());
     }
 
-    dataLogPromises = dataArr.map((data) => 
+    const dataLogPromises = dataArr.map((data) => 
       logger.log(data)
     );
 
@@ -207,7 +209,7 @@ describe("Logger", () => {
       for (let i = 0; i < amount; i++)
         dataArr.push(generateFakeData());
 
-      dataLogPromises = dataArr.map((data) => 
+      const dataLogPromises = dataArr.map((data) => 
         logger.log(data)
       );
 
