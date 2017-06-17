@@ -14,7 +14,6 @@ __Off the Grid__ is designed to handle this scenario. The basic idea is, __Off t
 3. [Contributing](#contributing)
 4. [License](#license)
 
-
 ## Getting Started
 ### Installation
 
@@ -97,11 +96,9 @@ Instantiates a new `OffTheGrid` object, with `opts`:
 
   Record data. `message` is `String` and `body` is `JSON`.
 
-
 ## Contributing
 
 [CONTRIBUTING.md](https://github.com/IrisVR/off-the-grid/blob/master/CONTRIBUTING.md)
-
 
 ## License
 
