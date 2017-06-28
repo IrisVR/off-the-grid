@@ -1,4 +1,6 @@
 const fs = require('fs');
+// fs-extra v.0.30.0
+// to be compatible with Prospect Launcher
 const fsExtra = require('fs-extra');
 
 const appendFile = (path, data) => {
@@ -37,8 +39,14 @@ const deleteFile = (path) => {
   });
 };
 
-const copyFile = (source, target) =>
-  fsExtra.copy(source, target);
+const copyFile = (source, target) => {
+  return new Promise((resolve, reject) => {
+    fsExtra.copy(source, target, (err) => {
+      if (err) return reject(err);
+      return resolve();
+    });
+  });
+};
 
 module.exports = {
   appendFile,
